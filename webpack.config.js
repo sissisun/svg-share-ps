@@ -33,7 +33,8 @@ module.exports = {
             fallback: 'style-loader',
             use: 'css-loader!sass-loader'
         })
-      }
+      },
+      {test: /\.(png|jpg|jpeg)$/, loader: 'url-loader?limit=2048&name=styles/images/[hash].[ext]'}
     ]
   },
   plugins: [
