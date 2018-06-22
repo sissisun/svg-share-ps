@@ -1,4 +1,4 @@
 import '../styles/index.scss'
+import CanvasPs from '../../libs/canvasPs'
 
-const a = 1;
-console.log(a)
+let fistPage = new CanvasPs()
