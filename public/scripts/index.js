@@ -9587,8 +9587,12 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
         initSvg(){
             this.svgData = []
-            this.svg = d3.select('.canvasBoard').append('svg').attr('width', '100%').attr('height', '100%')   
-            this.svgGroup = this.svg.append('g')      
+            this.svgDataGroup = []
+            this.svgEraserData = []
+            this.svgEraserDataGroup = []
+            this.eraserWidth = 30
+            this.eraserHeight = 30
+            this.svg = d3.select('.canvasBoard').append('svg').attr('width', '100%').attr('height', '100%')    
         },
 
         initEls(){
@@ -9606,9 +9610,19 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
                 //this.drawAxis()
                // this.drawHistogramAxis()
                //this.firstTransition()
+               this.resetPencilEvents()
                this.initPencilEvent()
                this.resetSelectedSelection()
                this.$pencil.classed('selected', true)
+            })
+
+            this.$erase.on('click', () => {
+                
+
+                this.resetSelectedSelection()
+                this.resetPencilEvents()
+                this.$erase.classed('selected', true)
+                this.initEraserEvent()
             })
 
             this.$rubbin.on('click', () => {
@@ -9628,6 +9642,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
         initPencilEvent() {
             this.svg.on('mousedown', () => {
+                console.log(222222)
                 console.log(d3.event)
                 this.beginDrawLine()
             })
@@ -9640,6 +9655,20 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
             this.svg.on('mouseup', () => {
                 console.log('mouseup')
                 this.endDrawLine()
+            })
+        },
+
+        initEraserEvent() {
+            this.svg.on('mousedown', () => {
+                this.beginDrawEraser()
+            })
+
+            this.svg.on('mousemove', () => {
+                this.drawEraser()
+            })
+
+            this.svg.on('mouseup', () => {
+                this.endDrawEraser()
             })
         },
 
@@ -9783,13 +9812,15 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
         },
 
         beginDrawLine() {
+            this.svgGroup = this.svg.append('g')  
+            this.svgDataGroup.push(this.svgGroup)
             let currentIndex = this.svgData.length
             this.svgData[currentIndex] = []
             let pos = d3.event
 
             this.svgData[currentIndex].push([pos.offsetX, pos.offsetY])
 
-            this.currentPath = this.svgGroup.selectAll('path').data(this.svgData).enter().append('path')
+            this.currentPath = this.svgGroup.selectAll('path').data(this.svgData[currentIndex]).enter().append('path')
             this.beginDraw = true
         },
 
@@ -9802,7 +9833,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
             line.x(function(d) {return d[0]}).y(function(d) {return d[1]})
 
-            let path = this.currentPath.attr('d', line(this.svgData[currentIndex])).attr('stroke', 'red').attr('stroke-width', 3).attr('fill','transparent')
+            this.currentPath.attr('d', line(this.svgData[currentIndex])).attr('stroke', 'red').attr('stroke-width', 3).attr('fill','transparent')
             
             
         },
@@ -9811,15 +9842,52 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
             this.beginDraw = false
         },
 
-        rubbinCanvas() {
-            this.svgData = []
+        beginDrawEraser() {
+            this.eraserGroup = this.svg.append('g')
 
-            this.svgGroup.selectAll('path').data(this.svgData).exit().remove()
+            this.svgEraserDataGroup.push(this.eraserGroup)
+
+            this.drawEraserByPos(true)
+
+            this.beginDrawEraserSign = true
         },
 
         drawEraser() {
-            
-        }
+            console.log(this.beginDrawEraser)
+            if(!this.beginDrawEraserSign) {return}
+
+            this.drawEraserByPos()
+        },
+
+        drawEraserByPos(begin) {
+            let currentIndex = begin ? this.svgEraserData.length : this.svgEraserData.length - 1
+            if(begin) {
+                this.svgEraserData[currentIndex] = []
+            }
+            let pos = d3.event
+            let path = d3.path()
+
+            path.rect(pos.offsetX - this.eraserWidth / 2, pos.offsetY - this.eraserHeight / 2, this.eraserWidth, this.eraserHeight)
+            this.svgEraserData[currentIndex].push(path)
+
+            this.eraserGroup.selectAll('path').data(this.svgEraserData[currentIndex]).enter().append('path').attr('d', function(d) {return d}).attr('fill', '#fff')
+        },
+
+        endDrawEraser() {
+            this.beginDrawEraserSign = false
+        },
+
+        rubbinCanvas() {
+
+            this.svgDataGroup.forEach((group, index) => {
+                group.selectAll('path').data([]).exit().remove()
+                group.remove()
+            })
+            this.svgEraserDataGroup.forEach((group, index) => {
+                group.selectAll('path').data([]).exit().remove()
+                group.remove()
+            })
+        },
     }
 
     return CanvasPs
