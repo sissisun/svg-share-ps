@@ -9586,38 +9586,72 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
         },
 
         initSvg(){
-            this.svg = d3.select('.canvasBoard').append('svg').attr('width', '100%').attr('height', '100%')            
+            this.svgData = []
+            this.svg = d3.select('.canvasBoard').append('svg').attr('width', '100%').attr('height', '100%')   
+            this.svgGroup = this.svg.append('g')      
         },
 
         initEls(){
-            this.$pencil = d3.select('.pencil').node()
+            this.$wheelBtns = d3.select('.wheelBtn')
+            this.$pencil = d3.select('.pencil')
             this.$rect = d3.select('.rect')
-            this.erase = d3.select('.erase')
-            this.rubbin = d3.select('.rubbin')
+            this.$erase = d3.select('.erase')
+            this.$rubbin = d3.select('.rubbin')
         },
         
         initEvents(){
-            this.$pencil.addEventListener('click', () => {
+            this.$pencil.on('click', () => {
                // this.drawCircle()
                 //this.drawHistogram()
                 //this.drawAxis()
                // this.drawHistogramAxis()
                //this.firstTransition()
-               this.drawPencil()
+               this.initPencilEvent()
+               this.resetSelectedSelection()
+               this.$pencil.classed('selected', true)
             })
-            this.svg.on('mousedown', function() {
-                console.log('mousedown')
+
+            this.$rubbin.on('click', () => {
+                
+
+                this.resetSelectedSelection()
+                this.resetPencilEvents()
+                //this.$rubbin.classed('selected', true)
+                this.rubbinCanvas()
+            })
+            
+        },
+
+        resetSelectedSelection() {
+            d3.select('.selected').classed('selected', false)
+        },
+
+        initPencilEvent() {
+            this.svg.on('mousedown', () => {
                 console.log(d3.event)
+                this.beginDrawLine()
             })
+
+            this.svg.on('mousemove', () => {
+                console.log('mousemove')
+                this.drawLine()
+            })
+
+            this.svg.on('mouseup', () => {
+                console.log('mouseup')
+                this.endDrawLine()
+            })
+        },
+
+        resetPencilEvents() {
+            this.svg.on('mosuedown', null)
+            this.svg.on('mousemove', null)
+            this.svg.on('mouseup', null)
         },
 
         drawCircle() {
             console.log('draw circle')
             this.svg.append('circle').attr('cx', '150px').attr('cy', '150px').attr('r', '50px').attr('fill', 'red')
-        },
-
-        drawRect() {
-
         },
 
         drawHistogram() {
@@ -9748,12 +9782,43 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
                     .ease(d3.easeBounce).attr('width', 300)
         },
 
-        drawPencil() {
+        beginDrawLine() {
+            let currentIndex = this.svgData.length
+            this.svgData[currentIndex] = []
+            let pos = d3.event
+
+            this.svgData[currentIndex].push([pos.offsetX, pos.offsetY])
+
+            this.currentPath = this.svgGroup.selectAll('path').data(this.svgData).enter().append('path')
+            this.beginDraw = true
+        },
+
+        drawLine() {
+            if(!this.beginDraw) {return}
+            let pos = d3.event
+            let currentIndex = this.svgData.length - 1
+            this.svgData[currentIndex].push([pos.offsetX, pos.offsetY])
             let line = d3.line()
 
             line.x(function(d) {return d[0]}).y(function(d) {return d[1]})
 
-            this.svg.append('g').append('path').attr('d', line([[80, 80], [100, 100]])).attr('stroke', 'red').attr('stroke-width', 3)
+            let path = this.currentPath.attr('d', line(this.svgData[currentIndex])).attr('stroke', 'red').attr('stroke-width', 3).attr('fill','transparent')
+            
+            
+        },
+
+        endDrawLine() {
+            this.beginDraw = false
+        },
+
+        rubbinCanvas() {
+            this.svgData = []
+
+            this.svgGroup.selectAll('path').data(this.svgData).exit().remove()
+        },
+
+        drawEraser() {
+            
         }
     }
 

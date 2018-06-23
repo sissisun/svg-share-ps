@@ -56,7 +56,7 @@ body {
       &.rubbin {
         background-position: -84px -0;
       }
-      &:hover {
+      &:hover, &.selected{
         background-color: #333;
         border-color: #838383;
       }

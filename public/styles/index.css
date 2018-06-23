@@ -50,7 +50,7 @@ body {
         background-position: -56px -0; }
       .canvasBoard .wheel .wheelBtn.rubbin {
         background-position: -84px -0; }
-      .canvasBoard .wheel .wheelBtn:hover {
+      .canvasBoard .wheel .wheelBtn:hover, .canvasBoard .wheel .wheelBtn.selected {
         background-color: #333;
         border-color: #838383; }
   .canvasBoard .bottomBar {
