@@ -1,4 +1,4 @@
 import '../styles/index.scss'
-import CanvasPs from '../../libs/canvasPs'
+import SvgPs from '../../libs/svgPs'
 
-let fistPage = new CanvasPs()
+let fistPage = new SvgPs()
