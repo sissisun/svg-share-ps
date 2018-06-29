@@ -1,6 +1,10 @@
 ## 一个基于d3.js的svg画板，并且利用socket.io提供多端共享
 
-###基本配置
+### demo
+
+![demo](./demo.png)
+
+### 基本配置
 ```
 wrapperCls: '.canvasBoardWrapper', //整个花画板的包裹类名
 pencilCls: '.pencil', //根据class来获取按钮
@@ -17,4 +21,10 @@ drawBeginCallback: null, //mousedown的回调
 drawCallback: null, //mousemove的回调
 drawEndCallback: null, //mouseup的回调
 ```
+
+### to do
+
+1.撤销动作
+2.g/path重组
+3.性能优化
 
