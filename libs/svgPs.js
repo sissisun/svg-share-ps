@@ -18,7 +18,10 @@
         svgWidth: '100%',
         svgHeight: '100%',
         pencilWidth: 3,
-        pencilColor: 'red'
+        pencilColor: 'red',
+        drawBeginCallback: null,
+        drawCallback: null,
+        drawEndCallback: null
     }
 
     let SvgPs = function(options) {
@@ -36,10 +39,6 @@
         initSvg(){
             this.svgData = []
             this.svgDataGroup = []
-            this.svgEraserData = []
-            this.svgEraserDataGroup = []
-            this.svgRectData = []
-            this.svgRectDataGroup = []
             this.eraserWidth = this.opts.eraserWidth
             this.eraserHeight = this.opts.eraserHeight
             this.svg = d3.select(this.opts.wrapperCls).append('svg').attr('width', this.opts.svgWidth).attr('height', this.opts.svgHeight)    
@@ -133,43 +132,69 @@
             this.svg.on('mouseup', null)
         },
 
-        beginDrawLine() {
+        beginDrawLine(data) {
             this.svgGroup = this.svg.append('g')  
             this.svgDataGroup.push(this.svgGroup)
-            let currentIndex = this.svgData.length
-            this.svgData[currentIndex] = []
+
+            this.svgData = []
             let pos = d3.event
 
-            this.svgData[currentIndex].push([pos.offsetX, pos.offsetY])
+            this.svgData.push([pos.offsetX, pos.offsetY])
 
-            this.currentPath = this.svgGroup.selectAll('path').data(this.svgData[currentIndex]).enter().append('path')
+            this.currentPath = this.svgGroup.selectAll('path').data(this.svgData).enter().append('path')
             this.beginDraw = true
+
+            this.opts.drawBeginCallback && this.opts.drawBeginCallback('line', this.svgData)
         },
 
-        drawLine() {
+        drawLine(data) {
             if(!this.beginDraw) {return}
+
             let pos = d3.event
-            let currentIndex = this.svgData.length - 1
-            this.svgData[currentIndex].push([pos.offsetX, pos.offsetY])
+            this.svgData.push([pos.offsetX, pos.offsetY])
+            
             let line = d3.line()
 
             line.x(function(d) {return d[0]}).y(function(d) {return d[1]})
-
-            this.currentPath.attr('d', line(this.svgData[currentIndex])).attr('stroke', this.opts.pencilColor).attr('stroke-width', this.opts.pencilWidth).attr('fill','transparent')
+            
+            this.currentPath.attr('d', line(this.svgData)).attr('stroke', this.opts.pencilColor).attr('stroke-width', this.opts.pencilWidth).attr('fill','transparent')
+            this.opts.drawCallback && this.opts.drawCallback('line', this.svgData)
         },
 
         endDrawLine() {
             this.beginDraw = false
+
+            this.opts.drawEndCallback && this.opts.drawEndCallback('line', this.svgData)
+        },
+
+        initDrawLineBySocket(data) {
+            this.svgGroup = this.svg.append('g')
+            this.svgDataGroup.push(this.svgGroup)
+
+            this.svgData = data
+            this.currentPath = this.svgGroup.selectAll('path').data(this.svgData).enter().append('path')
+        },
+
+        drawLineBySocket(data) {
+            this.svgData = data
+            
+            let line = d3.line()
+
+            line.x(function(d) {return d[0]}).y(function(d) {return d[1]})
+            
+            this.currentPath && this.currentPath.attr('d', line(this.svgData)).attr('stroke', this.opts.pencilColor).attr('stroke-width', this.opts.pencilWidth).attr('fill','transparent')
         },
 
         beginDrawEraser() {
             this.eraserGroup = this.svg.append('g')
 
-            this.svgEraserDataGroup.push(this.eraserGroup)
+            this.svgDataGroup.push(this.eraserGroup)
 
             this.drawEraserByPos(true)
 
             this.beginDrawEraserSign = true
+
+            this.opts.drawBeginCallback && this.opts.drawBeginCallback('eraser', this.svgData)
         },
 
         drawEraser() {
@@ -179,34 +204,51 @@
         },
 
         drawEraserByPos(begin) {
-            let currentIndex = begin ? this.svgEraserData.length : this.svgEraserData.length - 1
             if(begin) {
-                this.svgEraserData[currentIndex] = []
+                this.svgData = []
             }
+            
             let pos = d3.event
             let path = d3.path()
 
             path.rect(pos.offsetX - this.eraserWidth / 2, pos.offsetY - this.eraserHeight / 2, this.eraserWidth, this.eraserHeight)
-            this.svgEraserData[currentIndex].push(path)
+            this.svgData.push(path._)
 
-            this.eraserGroup.selectAll('path').data(this.svgEraserData[currentIndex]).enter().append('path').attr('d', function(d) {return d}).attr('fill', '#fff')
+            this.eraserGroup.selectAll('path').data(this.svgData).enter().append('path').attr('d', function(d) {return d}).attr('fill', '#fff')
+            this.opts.drawCallback && this.opts.drawCallback('eraser', this.svgData)
         },
 
         endDrawEraser() {
             this.beginDrawEraserSign = false
+
+            this.opts.drawEndCallback && this.opts.drawEndCallback('eraser', this.svgData)
+        },
+
+        initDrawEraserBySocket(data) {
+            this.eraserGroup = this.svg.append('g')
+            this.svgDataGroup.push(this.eraserGroup)
+            this.svgData = data
+        },
+
+        drawEraserBySocket(data) {
+            this.svgData = data
+
+            this.eraserGroup && this.eraserGroup.selectAll('path').data(this.svgData).enter().append('path').attr('d', function(d) {return d}).attr('fill', '#fff')
         },
 
         beginDrawRect() {
             this.rectGroup = this.svg.append('g')
 
-            this.svgRectDataGroup.push(this.rectGroup)
+            this.svgDataGroup.push(this.rectGroup)
 
             let pos = d3.event
 
             this.svgReactInitalPos = {x: pos.offsetX, y: pos.offsetY}
-            this.svgRectData = [pos.offsetX, pos.offsetY, 0, 0]
+            this.svgData = [pos.offsetX, pos.offsetY, 0, 0]
 
             this.beginDrawRectSign = true
+
+            this.opts.drawBeginCallback && this.opts.drawBeginCallback('rect', this.svgData)
         },
 
         drawRect() {
@@ -222,25 +264,82 @@
 
             path.rect(initialX, initialY, width, height)
 
-            this.svgRectData = [path]
+            this.svgData = [path._]
 
-            let update = this.rectGroup.selectAll('path').data(this.svgRectData)
+            let update = this.rectGroup.selectAll('path').data(this.svgData)
+            let enter = update.enter()
+
+            enter.append('path').attr('d', function(d) {return d}).attr('stroke', this.opts.pencilColor).attr('stroke-width', this.opts.pencilWidth).attr('fill', 'transparent')
+            update.attr('d', function(d) {return d}).attr('stroke', this.opts.pencilColor).attr('stroke-width', this.opts.pencilWidth).attr('fill', 'transparent')
+            
+            this.opts.drawCallback && this.opts.drawCallback('rect', this.svgData)
+        },
+
+        endDrawRect() {
+            this.beginDrawRectSign = false
+
+            this.opts.drawEndCallback && this.opts.drawEndCallback('rect', this.svgData)
+        },
+
+        initialDrawRectBySocket(data) {
+            this.rectGroup = this.svg.append('g')
+
+            this.svgDataGroup.push(this.rectGroup)
+            this.svgData = data
+        },
+
+        drawRectBySocket(data) {
+            this.svgData = data
+
+            let update = this.rectGroup.selectAll('path').data(this.svgData)
             let enter = update.enter()
 
             enter.append('path').attr('d', function(d) {return d}).attr('stroke', this.opts.pencilColor).attr('stroke-width', this.opts.pencilWidth).attr('fill', 'transparent')
             update.attr('d', function(d) {return d}).attr('stroke', this.opts.pencilColor).attr('stroke-width', this.opts.pencilWidth).attr('fill', 'transparent')
         },
 
-        endDrawRect() {
-            this.beginDrawRectSign = false
-        },
-
         rubbinCanvas() {
-
-            this.svgDataGroup.concat(this.svgEraserDataGroup).concat(this.svgRectDataGroup).forEach((group, index) => {
+            this.svgDataGroup.forEach(group => {
                 group.selectAll('path').data([]).exit().remove()
                 group.remove()
             })
+
+            this.opts.drawCallback && this.opts.drawCallback('empty')
+        },
+
+        initDraw(type, data) {
+            switch(type) {
+                case 'line':
+                    this.initDrawLineBySocket(data)
+                    break;
+                case 'rect':
+                    this.initialDrawRectBySocket(data)
+                    break;
+                case 'eraser':
+                    this.initDrawEraserBySocket(data)
+                    break;
+                default:
+                    break;
+            }
+        },
+
+        draw(type, data) {
+            switch(type) {
+                case 'line':
+                    this.drawLineBySocket(data)
+                    break;
+                case 'rect':
+                    this.drawRectBySocket(data)
+                    break;
+                case 'eraser':
+                    this.drawEraserBySocket(data)
+                    break;
+                case 'empty':
+                    this.rubbinCanvas()
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
