@@ -65,6 +65,18 @@ body {
         background-color: #333;
         border-color: #838383;
       }
+
+      &.stop {
+        background-image: url('./images//stop.png');
+        background-size: 30px 30px;
+        background-position: center;
+      }
+
+      &.undo {
+        background-image: url('./images/undo.png');
+        background-size: 30px 30px;
+        background-position: center;
+      }
     }
   }
   .bottomBar {

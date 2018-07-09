@@ -34,7 +34,7 @@ module.exports = {
             use: 'css-loader!sass-loader'
         })
       },
-      {test: /\.(png|jpg|jpeg)$/, loader: 'url-loader?limit=2048&name=styles/images/[hash].[ext]'}
+      {test: /\.(png|jpg|jpeg)$/, loader: 'url-loader?limit=4096&name=styles/images/[hash].[ext]'}
     ]
   },
   plugins: [

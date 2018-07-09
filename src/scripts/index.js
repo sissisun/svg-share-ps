@@ -40,6 +40,10 @@ var Home = {
         })
     },
 
+    closeSocket() {
+        this.socket.close()
+    },
+
     initSvgps() {
         this.firstSvgPage = new SvgPs({
             pencilColor: this.role === 'student' ? '#2eafa7' : 'red',

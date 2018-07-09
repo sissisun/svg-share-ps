@@ -13,6 +13,7 @@
         rectCls: '.rect',
         eraseCls: '.erase',
         rubbinCls: '.rubbin',
+        undoCls: '.undo',
         eraserWidth: 30,
         eraserHeight: 30,
         svgWidth: '100%',
@@ -50,6 +51,7 @@
             this.$rect = this.$wrapper.select(this.opts.rectCls)
             this.$erase = this.$wrapper.select(this.opts.eraseCls)
             this.$rubbin = this.$wrapper.select(this.opts.rubbinCls)
+            this.$undo = this.$wrapper.select(this.opts.undoCls)
         },
         
         initEvents(){
@@ -78,6 +80,13 @@
                 this.resetSelectedSelection()
                 this.resetEvents()
                 this.rubbinCanvas()
+            })
+
+            this.$undo.on('click', () => {
+                this.resetSelectedSelection()
+                this.resetEvents()
+
+                this.undo()
             })
             
         },
@@ -304,7 +313,20 @@
                 group.remove()
             })
 
+            this.svgData = []
+            this.svgDataGroup = []
+
             this.opts.drawCallback && this.opts.drawCallback('empty')
+        },
+
+        undo() {
+            this.lastSvgGroup = this.svgDataGroup.pop()
+
+            this.lastSvgGroup.remove()
+
+            this.svgData.pop()
+
+            this.opts.drawCallback && this.opts.drawCallback('undo')
         },
 
         initDraw(type, data) {
@@ -336,6 +358,9 @@
                     break;
                 case 'empty':
                     this.rubbinCanvas()
+                    break;
+                case 'undo':
+                    this.undo()
                     break;
                 default:
                     break;

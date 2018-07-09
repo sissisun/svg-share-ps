@@ -24,7 +24,7 @@ drawEndCallback: null, //mouseup的回调
 
 ### to do
 
-1.撤销动作
-2.g/path重组
+1.撤销动作 --finish
+2.g/path重组 -finish
 3.性能优化
 
